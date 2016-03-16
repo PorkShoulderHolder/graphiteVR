@@ -65,7 +65,7 @@ function ReadFileLUT(nodes : Array) {
     var ind = 0;
     Debug.Log(nodes);
     for(var ht:Hashtable in nodes){      
-    	var id = ht["id"];
+    	var id = ht["id"].ToString();
 
     	ind ++;
     	var poslist:Array = ht["positions"]; 
@@ -73,9 +73,9 @@ function ReadFileLUT(nodes : Array) {
     	var rgblist:Array = ht["colors"];
     	var rgb:Array = rgblist[0];
 
-    	var x =  parseFloat(pos[0].ToString()) / scaling;
-    	var y =  parseFloat(pos[1].ToString()) / scaling;
-    	var z =  parseFloat(pos[2].ToString()) / scaling;
+    	var x =  parseFloat(pos[0].ToString());
+    	var y =  parseFloat(pos[1].ToString());
+    	var z =  parseFloat(pos[2].ToString());
 
     	nodeLookup[id] = new Vector3(x,y,z);
     	uniquePoints[ind] = nodeLookup[id];
@@ -92,47 +92,49 @@ function ReadFileLUT(nodes : Array) {
 	Debug.Log(kdtree);
     return nodeLookup;
 }
-//
-//function addNeighbor(lookup : Hashtable, source : String, target : String, index : int){
-//	
-//	if(lookup[source]){
-//		var h : Hashtable = lookup[source];
-//		var a : List.<String> = h["indices"];
-//		var b : List.<String> = h["neighbors"];
-//		
-//		a.Add(index.ToString());
-//		b.Add(target);
-//	}
-//	else{
-//		lookup[source] = new Hashtable();
-//		var localHash : Hashtable = lookup[source];
-//		var aNew : List.<String> = new List.<String>();
-//		var bNew : List.<String> = new List.<String>();
-//		aNew.Add(index.ToString());
-//		bNew.Add(target);
-//		localHash["indices"] = aNew;
-//		localHash["neighbors"] = bNew;
-//	}	
-//}
+
+function addNeighbor(lookup : Hashtable, source : String, target : String, index : int){
+	
+	if(lookup[source]){
+		var h : Hashtable = lookup[source];
+		var a : List.<String> = h["indices"];
+		var b : List.<String> = h["neighbors"];
+		
+		a.Add(index.ToString());
+		b.Add(target);
+	}
+	else{
+		lookup[source] = new Hashtable();
+		var localHash : Hashtable = lookup[source];
+		var aNew : List.<String> = new List.<String>();
+		var bNew : List.<String> = new List.<String>();
+		aNew.Add(index.ToString());
+		bNew.Add(target);
+		localHash["indices"] = aNew;
+		localHash["neighbors"] = bNew;
+	}	
+}
 
 function ReadFileEdges(edges : Array){   
     var tempPoints = new Array();
     var tempColors = new Array();
-	
-    for(var edge:Hashtable in edges){
-    	Debug.Log(edge);
-        
-        var source =  edge["source"];
-        var target =  edge["target"];
+	var i = 0;
+    for(var edge:Hashtable in edges){        
+        var source =  edge["source"].ToString();
+        var target =  edge["target"].ToString();
  		tempColors.push(colorLookup[source]);
         tempColors.push(colorLookup[target]);
         tempPoints.push(positionLookup[source]);
         tempPoints.push(positionLookup[target]);
-        //addNeighbor(neighborLookup, source, target, i);
-        //addNeighbor(neighborLookup, target, source, i + 1);
+        addNeighbor(neighborLookup, source, target, i);
+        addNeighbor(neighborLookup, target, source, i + 1);
+        i += 2;
     }
-	var i = 0;
+
+	i = 0;
+
     for(nodepos in tempPoints){
+    	
     	pts[i] = nodepos;
     	i++;
     }
@@ -149,7 +151,6 @@ function ParseGexf(){
 	var www = new WWW(url);
 	yield www;
 	content = JSONUtils.ParseJSON(www.text);
-	Debug.Log(content["nodes"]);
-	ReadFileLUT(content["nodes"]);
+	positionLookup = ReadFileLUT(content["nodes"]);
 	ReadFileEdges(content["edges"]);
 }
