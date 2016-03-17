@@ -81,7 +81,7 @@ namespace AssemblyCSharp
 			if (round_accum > 0) {
 				accum -= round_accum;
 				// print ("FPS: " + ((float)nFrames / round_accum).ToString());
-				print ("packets per second: " + ((float)nPackets / round_accum).ToString());
+				// print ("packets per second: " + ((float)nPackets / round_accum).ToString());
 				nPackets = 0;
 				nFrames = 0;
 			}

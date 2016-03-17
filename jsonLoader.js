@@ -8,22 +8,23 @@ import System.IO;
 @script RequireComponent(MeshRenderer);
 
 static var kdtree : KDTree;
-static var uniquePoints : Vector3[] =  new Vector3[12835];
-static var idList : String[] =  new String[12835];
+static var uniquePoints : Vector3[]; 
+static var colorList : Color[]; 
+
+static var idList : String[];
 
 static var mesh: Mesh;
 static var positionLookup = new Hashtable();
 static var colorLookup = new Hashtable();
 static var neighborLookup = new Hashtable();
 static var selectedIndices : List.<int>;
-static var opacity = 0.1;
-static var scaling = 500.0;
-var numPoints: int = 60000;
-var start = 0;
-var pts: Vector3[] = new Vector3[47486];
-var clrs: Color[] = new Color[47486];
-var content = new Hashtable();
+static var indexLookup = new Hashtable();
+static var indicesMaster : int[];
 
+public var opacity = 0.1;
+static var scaling = 500.0;
+
+var content = new Hashtable();
 
 public var url: String = "localhost:9000/api/list";
 
@@ -40,34 +41,40 @@ function Update () {
 	
 }
 
-function CreateMesh() {
-	ParseGexf();
-	var points: Vector3[] = pts;
-	var numPoints = points.Length;
-	var indices: int[] = new int[numPoints];
-	var colors : Color[] = clrs;
-	for(var i: int=0;i<points.Length;++i) {
-		//points[i] = new Vector3(Random.value * 200, Random.value * 100, Random.value * 100);
-		indices[i] = i;
-		//colors[i] = new Color(0,1,0,0.07);
-	};
-	mesh.vertices = points;
-	mesh.colors = colors;
-	mesh.SetIndices(indices, MeshTopology.Lines,0);
+function ColorMap(index){
 	
 }
 
+function CreateMesh() {
+	var www = new WWW(url);
+	yield www;
+	Debug.Log(www.error);
+	content = JSONUtils.ParseJSON(www.text);
 
-// Update is called once per frame
+	positionLookup = processNodes(content["nodes"]);
+	Debug.Log("done w/ nodes");
+	indicesMaster = processEdges(content["edges"], indicesMaster);
+	Debug.Log("done w/ edges");
 
-function ReadFileLUT(nodes : Array) {
+	mesh.vertices = uniquePoints;
+	mesh.colors = colorList;
+	mesh.SetIndices(indicesMaster, MeshTopology.Lines,0);
+}
+
+
+function processNodes(nodes : Array) {
     var nodeLookup = new Hashtable();
     var ind = 0;
-    Debug.Log(nodes);
+
+    // set global vars
+
+    uniquePoints = new Vector3[nodes.length];
+    idList = new String[nodes.length];
+    colorList = new Color[nodes.length];
+
     for(var ht:Hashtable in nodes){      
     	var id = ht["id"].ToString();
 
-    	ind ++;
     	var poslist:Array = ht["positions"]; 
     	var pos:Array = poslist[0];
     	var rgblist:Array = ht["colors"];
@@ -80,21 +87,23 @@ function ReadFileLUT(nodes : Array) {
     	nodeLookup[id] = new Vector3(x,y,z);
     	uniquePoints[ind] = nodeLookup[id];
     	idList[ind] = id;
-
-    	        	
-    	var r =  rgb[0];
-    	var g =  rgb[1];
-    	var b =  rgb[2];
-    	colorLookup[id] = new Color(r,g,b,opacity);
+    	indexLookup[id] = ind;
+   	
+    	var r:double =  rgb[0];
+    	var g:double =  rgb[1];
+    	var b:double =  rgb[2];
+    	var div:double = 256.00000;
+    	var c:Color;
+    	c = new Color(r/div, g/div, b/div, opacity);
+    	colorLookup[id] = c;
+    	colorList[ind] = c;
+    	ind ++;
     }
-    Debug.Log(ind);
     kdtree = KDTree.MakeFromPoints(uniquePoints);
-	Debug.Log(kdtree);
     return nodeLookup;
 }
 
 function addNeighbor(lookup : Hashtable, source : String, target : String, index : int){
-	
 	if(lookup[source]){
 		var h : Hashtable = lookup[source];
 		var a : List.<String> = h["indices"];
@@ -115,42 +124,18 @@ function addNeighbor(lookup : Hashtable, source : String, target : String, index
 	}	
 }
 
-function ReadFileEdges(edges : Array){   
-    var tempPoints = new Array();
-    var tempColors = new Array();
+function processEdges(edges : Array, indices : int[]){   
+    indices = new int[2 * edges.length]; 
 	var i = 0;
+
     for(var edge:Hashtable in edges){        
-        var source =  edge["source"].ToString();
-        var target =  edge["target"].ToString();
- 		tempColors.push(colorLookup[source]);
-        tempColors.push(colorLookup[target]);
-        tempPoints.push(positionLookup[source]);
-        tempPoints.push(positionLookup[target]);
+        var source = edge["source"].ToString();
+        var target = edge["target"].ToString();
         addNeighbor(neighborLookup, source, target, i);
         addNeighbor(neighborLookup, target, source, i + 1);
+        indices[i] = indexLookup[source];
+        indices[i+1] = indexLookup[target];
         i += 2;
     }
-
-	i = 0;
-
-    for(nodepos in tempPoints){
-    	
-    	pts[i] = nodepos;
-    	i++;
-    }
-
-    i = 0;
-    for(c in tempColors){
-    	clrs[i] = c;
-    	i++;
-    }
-
-}
-
-function ParseGexf(){
-	var www = new WWW(url);
-	yield www;
-	content = JSONUtils.ParseJSON(www.text);
-	positionLookup = ReadFileLUT(content["nodes"]);
-	ReadFileEdges(content["edges"]);
+    return indices;
 }
