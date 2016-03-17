@@ -45,11 +45,15 @@ function ColorMap(index){
 	
 }
 
+
+
 function CreateMesh() {
 	var www = new WWW(url);
 	yield www;
 	Debug.Log(www.error);
+
 	content = JSONUtils.ParseJSON(www.text);
+
 
 	positionLookup = processNodes(content["nodes"]);
 	Debug.Log("done w/ nodes");
