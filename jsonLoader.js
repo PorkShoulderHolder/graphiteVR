@@ -69,6 +69,9 @@ function createMeshObject(name:String, points:Vector3[], colors:Color[], indices
 	var mesh: Mesh = new Mesh();
 
 	meshObject.transform.parent = this.transform;
+	meshObject.transform.localScale = new Vector3(1,1,1);
+	meshObject.transform.localPosition = new Vector3(0,0,0);
+
 	meshObject.AddComponent(MeshRenderer);
 	meshObject.GetComponent.<MeshRenderer>().material = material;
 
