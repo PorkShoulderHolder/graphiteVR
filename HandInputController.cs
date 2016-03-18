@@ -9,7 +9,7 @@ public class HandInputController : MonoBehaviour {
 	public Transform ring;
 	public Transform pinky;
 
-	public NodeLineRenderer[] line_sets;
+	public FingerRenderer[] line_sets;
 
 	private const float OPEN_ANGLE = 60;
 
@@ -28,7 +28,7 @@ public class HandInputController : MonoBehaviour {
 	}
 
 	float getFingerAngle(Transform finger) {
-		return Vector3.Angle (hand.forward, finger.forward);
+		return Vector3.Angle (hand.up, finger.up);
 	}
 
 	// Update is called once per frame
@@ -40,25 +40,52 @@ public class HandInputController : MonoBehaviour {
 		float ring_angle = getFingerAngle (ring);
 		float pinky_angle = getFingerAngle (pinky);
 
-		bool thumb_open = (thumb_angle < OPEN_ANGLE);
+		bool thumb_open = (thumb_angle < OPEN_ANGLE/2);
 		bool index_open = (index_angle < OPEN_ANGLE);
 		bool middle_open = (middle_angle < OPEN_ANGLE);
 		bool ring_open = (ring_angle < OPEN_ANGLE);
 		bool pinky_open = (pinky_angle < OPEN_ANGLE);
 		//Debug.Log (string.Format("{0}, {1}, {2}, {3}", index_angle, middle_angle, ring_angle, pinky_angle));
 
-		if (index_open && !middle_open && !ring_open && !pinky_open)
+		if (!thumb_open && index_open && !middle_open && !ring_open && !pinky_open)
 			status = HandStatus.ONE_FINGER;
-		if (index_open && middle_open && !ring_open && !pinky_open)
+		if (!thumb_open && index_open && middle_open && !ring_open && !pinky_open)
 			status = HandStatus.TWO_FINGER;
-		if (index_open && middle_open && ring_open && pinky_open)
+		if (!thumb_open && index_open && middle_open && ring_open && pinky_open)
 			status = HandStatus.FOUR_FINGER;
-		//if (index_open && middle_open && ring_open && pinky_open)
-		//	status = HandStatus.OPEN;
-		if (!index_open && !middle_open && !ring_open && !pinky_open)
+		if (thumb_open && index_open && middle_open && ring_open && pinky_open)
+			status = HandStatus.OPEN;
+		if (!thumb_open && !index_open && !middle_open && !ring_open && !pinky_open)
 			status = HandStatus.CLOSED;
 
 		setLineSetsColor (status);
+		/*
+		if (thumb_open) {
+			line_sets [0].setColor (Color.green);
+		} else {
+			line_sets [0].setColor (Color.red);
+		}
+		if (index_open) {
+			line_sets [1].setColor (Color.green);
+		} else {
+			line_sets [1].setColor (Color.red);
+		}
+		if (middle_open) {
+			line_sets [2].setColor (Color.green);
+		} else {
+			line_sets [2].setColor (Color.red);
+		}
+		if (ring_open) {
+			line_sets [3].setColor (Color.green);
+		} else {
+			line_sets [3].setColor (Color.red);
+		}
+		if (pinky_open) {
+			line_sets [4].setColor (Color.green);
+		} else {
+			line_sets [4].setColor (Color.red);
+		}
+		*/
 	}
 
 	void setLineSetsColor(HandStatus status) {
@@ -84,7 +111,7 @@ public class HandInputController : MonoBehaviour {
 			c = Color.white;
 			break;
 		}
-		foreach (NodeLineRenderer line_set in line_sets) {
+		foreach (FingerRenderer line_set in line_sets) {
 			line_set.setColor (c);
 		}
 	}
