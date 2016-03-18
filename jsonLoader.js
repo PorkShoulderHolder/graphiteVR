@@ -21,7 +21,7 @@ static var selectedIndices : List.<int>;
 static var indexLookup = new Hashtable();
 static var indicesMaster : int[];
 
-public var opacity = 0.006;
+public var opacity = 0.06;
 static var scaling = 500.0;
 
 var content = new Hashtable();
@@ -63,6 +63,9 @@ function createMeshObject(name:String, points:Vector3[], colors:Color[], indices
 	
 	var meshObject:GameObject = new GameObject(name);
 	var material = new Material(Shader.Find ("Mobile/Particles/Additive"));
+	if( name == "Nodes" ){
+		material = new Material(Shader.Find ("Mobile/Particles/Alpha Blended"));
+	}
 	var mesh: Mesh = new Mesh();
 
 	meshObject.transform.parent = this.transform;
@@ -85,24 +88,7 @@ function UpdateMeshes() {
     }
 
 	createMeshObject("Edges", uniquePoints, colorList, indicesMaster, MeshTopology.Lines);
-	createMeshObject("Nodes", uniquePoints, colorList, identityList, MeshTopology.Points);
-//	var pointsMesh: Mesh;
-//
-//	var 
-//	mesh = new Mesh();
-//	pointsMesh = new Mesh();
-//
-//
-//	Debug.Log(GetComponent);
-//	gameObject.AddComponent(MeshFilter);
-//	this.GetComponent.<MeshFilter>().mesh = mesh;
-//	this.GetComponent.<MeshFilter>().mesh = pointsMesh;
-//	pointsMesh.vertices = uniquePoints;
-//	pointsMesh.colors = ptColorList;
-//	pointsMesh.SetIndices(identityList, MeshTopology.Points,0);
-//	mesh.vertices = uniquePoints;
-//	mesh.colors = colorList;
-//	mesh.SetIndices(indicesMaster, MeshTopology.Lines,0);
+	createMeshObject("Nodes", uniquePoints, ptColorList, identityList, MeshTopology.Points);
 }
 
 function processNodes(nodes : Array) {
