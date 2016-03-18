@@ -1,9 +1,9 @@
 ﻿
 public var url:String = "localhost:9000/api/list";
-
+var www:WWW;
 // Use this for initialization
 function Start () {
-	var www = new WWW(url);
+	www = new WWW(url);
 	yield www;
 	Debug.Log(www.error);
 	var s = www.text.Remove(0,1).Remove(www.text.length-2,1).Split(","[0]);
@@ -24,5 +24,7 @@ function Start () {
 
 // Update is called once per frame
 function Update () {
+//	if(
+	
 }
 

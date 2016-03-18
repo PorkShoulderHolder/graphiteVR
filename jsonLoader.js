@@ -20,49 +20,89 @@ static var neighborLookup = new Hashtable();
 static var selectedIndices : List.<int>;
 static var indexLookup = new Hashtable();
 static var indicesMaster : int[];
-
+static var www:WWW;
 public var opacity = 0.006;
 static var scaling = 500.0;
+static var loaded = false;
+static var meshesLoaded = false;
 
+static var ns = 0;
+static var es = 0;
+static var nodesComplete = 0;
+static var edgesComplete = 0 ;
+static var dld = false;
 var content = new Hashtable();
 
 public var url: String = "localhost:9000/api/list";
 
 
-function Start() {
-	var www = new WWW(url);
-	yield www;
-	Debug.Log(www.error);
-
-	content = JSONUtils.ParseJSON(www.text);
-	processData(content);
-	UpdateMeshes();
+function loadFromServer(){
+		Debug.Log("started");
+		www = new WWW(url);
+		yield;
 	
+}
+
+function Start() {
+	Debug.Log("started");
+		dld = true;
+	loadFromServer();
 	//InvokeRepeating("testUpdate", 0, 0.05);
 } 
 
-function Update () {
-	
+function checkFinished(){
+	return (ns - 1) == nodesComplete && ((2 * es) - 1) == edgesComplete && nodesComplete > 0 && edgesComplete > 0;
 }
 
-function ColorMap(index){
-	
+function Update () {
+
+	if(!loaded && !dld){
+		loadFromServer();
+	}
+	if(www.isDone && !checkFinished() && !loaded){
+		Debug.Log("completed dl: " + www.error);
+		JSONUtils.ParseJSON(www.text, function(output:Hashtable){
+			content = output;
+			Debug.Log("completed parseing: " + www.error);
+			loaded = true;
+		}, function(progress:int){
+			Debug.Log("json decoding: " + progress);
+		});
+	}
+	else if (www.isDone && !checkFinished()){
+		processData(content);
+
+	}
+	else if(www.isDone && checkFinished()){
+		UpdateMeshes();
+	}
+			Debug.Log(nodesComplete + ", " + edgesComplete + "} " + ns);
+
 }
+
 
 function processData(content : Hashtable){
-	positionLookup = processNodes(content["nodes"]);
-	Debug.Log("done w/ nodes");
-    Debug.Log("node count: " + uniquePoints.length);
-
-	indicesMaster = processEdges(content["edges"], indicesMaster);
-	Debug.Log("done w/ edges");
-    Debug.Log("edge count * 2: " + indicesMaster.length);
+	if(nodesComplete  == 0){
+		processNodes(content["nodes"]);
+		Debug.Log("done w/ nodes");
+    	Debug.Log("node count: " + uniquePoints.length);
+    	Debug.Log(ns + "node count: " + nodesComplete);
+    }
+    if(nodesComplete == (ns - 1) && edgesComplete == 0){
+		processEdges(content["edges"]);	
+		Debug.Log("done w/ edges");
+   		Debug.Log("edge count * 2: " + indicesMaster.length);
+    }
 }
 
 function createMeshObject(name:String, points:Vector3[], colors:Color[], indices:int[], topoType:int){
 	
 	var meshObject:GameObject = new GameObject(name);
 	var material = new Material(Shader.Find ("Mobile/Particles/Additive"));
+
+	if( name == "Nodes" ){
+		material = new Material(Shader.Find ("Mobile/Particles/Alpha Blended"));
+	}
 	var mesh: Mesh = new Mesh();
 
 	meshObject.transform.parent = this.transform;
@@ -71,6 +111,9 @@ function createMeshObject(name:String, points:Vector3[], colors:Color[], indices
 
 	meshObject.AddComponent(MeshFilter);
 	meshObject.GetComponent.<MeshFilter>().mesh = mesh;
+
+	meshObject.transform.localScale = new Vector3(1,1,1);
+	meshObject.transform.localPosition = new Vector3(0,0,0);
 
 	mesh.vertices = points;
 	mesh.colors = colors;
@@ -85,7 +128,7 @@ function UpdateMeshes() {
     }
 
 	createMeshObject("Edges", uniquePoints, colorList, indicesMaster, MeshTopology.Lines);
-	createMeshObject("Nodes", uniquePoints, colorList, identityList, MeshTopology.Points);
+	createMeshObject("Nodes", uniquePoints, ptColorList, identityList, MeshTopology.Points);
 //	var pointsMesh: Mesh;
 //
 //	var 
@@ -146,12 +189,16 @@ function processNodes(nodes : Array) {
 
     	colorLookup[id] = c;
     	colorList[ind] = c;
-    	ptColorList[ind] = cpt;
+		nodesComplete = ind;
 
+    	ptColorList[ind] = cpt;
+    	if( ind % 1000 == 0 ) {
+    		yield;
+    	}
     	ind ++;
     }
+    ns = nodes.length;
     kdtree = KDTree.MakeFromPoints(uniquePoints);
-    return nodeLookup;
 }
 
 function addNeighbor(lookup : Hashtable, source : String, target : String, index : int){
@@ -175,8 +222,8 @@ function addNeighbor(lookup : Hashtable, source : String, target : String, index
 	}	
 }
 
-function processEdges(edges : Array, indices : int[]){   
-    indices = new int[2 * edges.length]; 
+function processEdges(edges : Array){   
+    indicesMaster = new int[2 * edges.length]; 
 	var i = 0;
 	var g = 0;
     for(var edge:Hashtable in edges){        
@@ -184,9 +231,13 @@ function processEdges(edges : Array, indices : int[]){
     	var target = edge["target"].ToString();
     	//addNeighbor(neighborLookup, source, target, i);
     	//addNeighbor(neighborLookup, target, source, i + 1);
-    	indices[i] = indexLookup[source];
-    	indices[i+1] = indexLookup[target];
+    	indicesMaster[i] = indexLookup[source];
+    	indicesMaster[i+1] = indexLookup[target];
     	i += 2;
+		edgesComplete = i;
+    	if( i % 1000 == 0 ) {
+    		yield;
+    	}
     }
-    return indices;
-}
+    es = 2 * edges.length;
+ }

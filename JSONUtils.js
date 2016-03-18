@@ -181,7 +181,9 @@ class JSONUtils
  
 	    if(ch == "{") {
 //	        return object();
-	        return hashtable();
+			var callback:Function = function(output:Hashtable){return output;};
+			var prog:Function = function(progress:int){};
+	        hashtable(callback, prog);
 	    } else if(ch == "[") {
 	        return array();
 	    } else if(ch == "\"") {
@@ -309,13 +311,13 @@ class JSONUtils
 //	    error("Bad object");
 //	}
  
-	private static function hashtable () : Hashtable
+	private static function hashtable (callback:Function, progress:Function)
 	{
 	    white();
- 
-	    var key : String;
+
+  	    var key : String;
 	    var object = new Hashtable();
- 
+ 		var counter:int = 0;
 	    if(ch == "{")
 	    {
 	        next("{");
@@ -323,7 +325,7 @@ class JSONUtils
 	        if(ch == "}")
 	        {
 	            next("}");
-	            return object; // empty object
+	            callback(object); // empty object
 	        }
 	        while(ch)
 	        {
@@ -335,32 +337,36 @@ class JSONUtils
 	            if (ch == "}")
 	            {
 	                next("}");
-	                return object;
+	                callback(object);
 	            }
 	            next(",");
 	            white();
+	            progress(counter);
+	            yield;
 	        }
 	    }
 	    error("Bad hashtable");
-	    return Hashtable();
+	    callback(Hashtable());
 	}
  
  
  
-	public static function ParseJSON ( source:String ):Hashtable
+	public static function ParseJSON ( source:String, onFinish:Function, progress:Function ):Hashtable
 	{
 	    var result:Hashtable;
  
 	    text = source;
 	    at = 0;
 	    ch = " ";
-	    result = hashtable();
-	    white();
-	    if (ch)
-	    {
-	        error("Syntax error");
-	    }
-	    return result;
+	    hashtable(function (ht){
+	    	result = ht;
+	    	white();
+		    if (ch)
+		    {
+		        error("Syntax error");
+		    }
+		    onFinish(result);
+	    }, progress);
 	}
  
 	/**
