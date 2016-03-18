@@ -13,6 +13,7 @@ function Start () {
 		clean[clean.length-1] = "";
 		var cleaned:String = clean.join(" ").Remove(0,1);
 		var textObject:GameObject = new GameObject("textbox");
+		textObject.transform.parent = this.transform;
 		textObject.AddComponent(TextMesh);
 		textObject.GetComponent(TextMesh).text = cleaned;
 		textObject.transform.position.y = 0.2 * i;
