@@ -26,7 +26,7 @@ namespace AssemblyCSharp
 		}
 		public virtual void SetBodyData(Vector3 pos, Quaternion rot, Vector3 root_position, Quaternion root_rotation) {
 			this.transform.localPosition = Quaternion.Inverse(root_rotation) * (pos - root_position);
-			this.transform.localRotation = rot * Quaternion.Inverse(root_rotation);
+			this.transform.localRotation = Quaternion.Inverse(root_rotation) * rot;
 		}
 	}
 }
