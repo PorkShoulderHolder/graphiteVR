@@ -1,8 +1,10 @@
-﻿//import SimpleJSON;
+﻿#pragma strict
+//import SimpleJSON;
 
 
 import System.Collections.Generic; 
 import System.IO;
+
 
 @script RequireComponent(MeshFilter);
 @script RequireComponent(MeshRenderer);
@@ -21,8 +23,18 @@ static var selectedIndices : List.<int>;
 static var indexLookup = new Hashtable();
 static var indicesMaster : int[];
 
-public var opacity = 0.06;
+static var selectedIndex:int = -1;
+static var savedColor = new Color(0,0,0,0);
+static var highlightColor = new Color(1,0,0,1);
+
+public var finger:Transform;
+public static var opacity = 0.06;
 static var scaling = 500.0;
+static var cccc = 0;
+static var nodesMesh:Mesh;
+static var edgesMesh:Mesh;
+public var offset = 0.3;
+static var sphere : GameObject;
 
 var content = new Hashtable();
 
@@ -30,6 +42,8 @@ public var url: String = "localhost:9000/api/list";
 
 
 function Start() {
+	sphere = GameObject.Find("Sphere");
+
 	var www = new WWW(url);
 	yield www;
 	Debug.Log(www.error);
@@ -38,16 +52,68 @@ function Start() {
 	processData(content);
 	UpdateMeshes();
 	
-	//InvokeRepeating("testUpdate", 0, 0.05);
 } 
 
 function Update () {
+	var p : Vector3 = new Vector3(finger.position.x , finger.position.y, finger.position.z);
+
+	//var p = sphere.transform.position;
+	p /= this.transform.localScale.x;
+	p[1] += offset;
+	var index:int = kdtree.FindNearest(p);
+	highlight(index);
+}
+function testUpdate(){
 	
 }
 
 function ColorMap(index){
 	
 }
+
+public static function unHighlight(index){
+	var nodesChild:GameObject = GameObject.Find("Network/Nodes");
+	var edgesChild:GameObject = GameObject.Find("Network/Edges");
+	 
+	var nodesMesh:Mesh = nodesChild.GetComponent.<MeshFilter>().mesh;
+	var edgesMesh:Mesh = edgesChild.GetComponent.<MeshFilter>().mesh;
+
+	if( selectedIndex >= 0 ){
+		var nsColor = new Color(savedColor[0],savedColor[0],savedColor[0],1);
+		var esColor = new Color(savedColor[0],savedColor[0],savedColor[0],opacity);
+		nodesMesh.colors[selectedIndex] = nsColor;
+		edgesMesh.colors[selectedIndex] = esColor;
+	}
+	selectedIndex = -1;
+}
+
+function highlight(index:int){
+	var edgesChild:GameObject = GameObject.Find("Edges");
+	var cs:Color[] = colorList;
+	var ptCs:Color[] = ptColorList;
+
+	if( selectedIndex >= 0 ){
+		var nsColor = new Color(savedColor[0],savedColor[1],savedColor[2],1);
+		var esColor = new Color(savedColor[0],savedColor[1],savedColor[2],opacity);
+		cs[selectedIndex] = esColor;
+		ptCs[selectedIndex] = nsColor;
+	}
+
+	savedColor = cs[index];
+
+
+	cs[index] = highlightColor;
+	ptCs[index] = highlightColor;
+
+	selectedIndex = index;
+
+	nodesMesh.vertices = uniquePoints;
+	edgesMesh.vertices = uniquePoints;
+
+	nodesMesh.colors  = ptCs;
+	edgesMesh.colors  = cs;
+}
+
 
 function processData(content : Hashtable){
 	positionLookup = processNodes(content["nodes"]);
@@ -59,14 +125,13 @@ function processData(content : Hashtable){
     Debug.Log("edge count * 2: " + indicesMaster.length);
 }
 
-function createMeshObject(name:String, points:Vector3[], colors:Color[], indices:int[], topoType:int){
+function createMeshObject(mesh:Mesh, name:String, points:Vector3[], colors:Color[], indices:int[], topoType:int){
 	
 	var meshObject:GameObject = new GameObject(name);
 	var material = new Material(Shader.Find ("Mobile/Particles/Additive"));
 	if( name == "Nodes" ){
 		material = new Material(Shader.Find ("Mobile/Particles/Alpha Blended"));
 	}
-	var mesh: Mesh = new Mesh();
 
 	meshObject.transform.parent = this.transform;
 	meshObject.transform.localScale = new Vector3(1,1,1);
@@ -78,6 +143,7 @@ function createMeshObject(name:String, points:Vector3[], colors:Color[], indices
 	meshObject.AddComponent(MeshFilter);
 	meshObject.GetComponent.<MeshFilter>().mesh = mesh;
 
+	mesh.MarkDynamic();
 	mesh.vertices = points;
 	mesh.colors = colors;
 	mesh.SetIndices(indices, topoType, 0);
@@ -90,9 +156,12 @@ function UpdateMeshes() {
     	identityList[i] = i;
     }
 
-	createMeshObject("Edges", uniquePoints, colorList, indicesMaster, MeshTopology.Lines);
-	createMeshObject("Nodes", uniquePoints, ptColorList, identityList, MeshTopology.Points);
+    nodesMesh = new Mesh();
+    edgesMesh = new Mesh();
+	createMeshObject(edgesMesh, "Edges", uniquePoints, colorList, indicesMaster, MeshTopology.Lines);
+	createMeshObject(nodesMesh, "Nodes", uniquePoints, ptColorList, identityList, MeshTopology.Points);
 }
+
 
 function processNodes(nodes : Array) {
     var nodeLookup = new Hashtable();

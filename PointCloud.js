@@ -53,7 +53,7 @@ static function Highlight(indices){
 		colors[i] = new Color(colors[i][0],colors[i][1],colors[i][2],opacity);
 	}
 	for(j in indices){
-		colors[j] = new Color(colors[j][0],colors[j][1],colors[j][2],1);;
+		colors[j] = new Color(colors[j][0],colors[j][1],colors[j][2],1);
 	}
 	
 	mesh.colors = colors;
