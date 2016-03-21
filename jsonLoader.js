@@ -56,12 +56,12 @@ function Start() {
 } 
 
 function Update () {
-	//var p : Vector3 = new Vector3(finger.position.x , finger.position.y, finger.position.z);
+	var p : Vector3 = new Vector3(finger.position.x , finger.position.y, finger.position.z);
 
-	var p = sphere.transform.position;
+	//var p = sphere.transform.position;
 	offset =  this.transform.position.y; 
 
-	p[1] -= offset;
+	p -= this.transform.position;
 	p /= this.transform.localScale.x;
 	var index:int = kdtree.FindNearest(p);
 	highlight(index);
@@ -201,7 +201,6 @@ function processNodes(nodes : Array) {
 
     	c = new Color(r/div, g/div, b/div, opacity);
     	cpt = new Color(r/div, g/div, b/div, 1);
-
 
     	colorLookup[id] = c;
     	colorList[ind] = c;
