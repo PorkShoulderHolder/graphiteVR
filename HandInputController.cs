@@ -31,7 +31,9 @@ public class HandInputController : MonoBehaviour {
 	}
 	private HandStatus handStatus = 0; 
 	private HandStatus prevHandStatus = 0; 
+	
 	private Vector3 startPos;
+	private Vector3 initialPosition;
 	private Vector3 initialScale;
 
 
@@ -48,9 +50,9 @@ public class HandInputController : MonoBehaviour {
 	void Update () {
 		prevHandStatus = handStatus;
 		handStatus = getHandStatus();
-		
 		setLineSetsColor(handStatus);
 		scaleNetwork ();
+		moveNetwork ();
 	}
 
 	HandStatus getHandStatus(){
@@ -151,5 +153,16 @@ public class HandInputController : MonoBehaviour {
 				delta = hand.position.y - startPos.y;
 				network.transform.localScale = new Vector3(initialScale[0] + delta, initialScale[1] + delta, initialScale[2] + delta);
 		} 
+	}
+
+	void moveNetwork(){
+			Vector3 delta = new Vector3(0,0,0);
+			if (prevHandStatus != handStatus && handStatus == HandStatus.CLOSED) {
+					startPos = hand.position;
+					initialPosition = network.transform.position;
+			} else if (handStatus == HandStatus.CLOSED) {
+					delta = hand.position - startPos;
+					network.transform.position = initialPosition + delta;
+			} 
 	}
 }

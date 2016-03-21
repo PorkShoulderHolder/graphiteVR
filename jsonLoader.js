@@ -56,12 +56,13 @@ function Start() {
 } 
 
 function Update () {
-	var p : Vector3 = new Vector3(finger.position.x , finger.position.y, finger.position.z);
+	//var p : Vector3 = new Vector3(finger.position.x , finger.position.y, finger.position.z);
 
-	//var p = sphere.transform.position;
-	offset =  this.transform.position.y / this.transform.localScale.y 
+	var p = sphere.transform.position;
+	offset =  this.transform.position.y; 
+
+	p[1] -= offset;
 	p /= this.transform.localScale.x;
-	p[1] += offset;
 	var index:int = kdtree.FindNearest(p);
 	highlight(index);
 
