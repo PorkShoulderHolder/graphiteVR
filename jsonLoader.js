@@ -33,10 +33,11 @@ static var scaling = 500.0;
 static var cccc = 0;
 static var nodesMesh:Mesh;
 static var edgesMesh:Mesh;
-public var offset = 0.3;
+public var offset = -7.22;
 static var sphere : GameObject;
 
 var content = new Hashtable();
+var handStatus:int;
 
 public var url: String = "localhost:9000/api/list";
 
@@ -51,17 +52,19 @@ function Start() {
 	content = JSONUtils.ParseJSON(www.text);
 	processData(content);
 	UpdateMeshes();
-	
+
 } 
 
 function Update () {
 	var p : Vector3 = new Vector3(finger.position.x , finger.position.y, finger.position.z);
 
 	//var p = sphere.transform.position;
+	offset =  this.transform.position.y / this.transform.localScale.y 
 	p /= this.transform.localScale.x;
 	p[1] += offset;
 	var index:int = kdtree.FindNearest(p);
 	highlight(index);
+
 }
 function testUpdate(){
 	
@@ -100,11 +103,8 @@ function highlight(index:int){
 	}
 
 	savedColor = cs[index];
-
-
 	cs[index] = highlightColor;
 	ptCs[index] = highlightColor;
-
 	selectedIndex = index;
 
 	nodesMesh.vertices = uniquePoints;
