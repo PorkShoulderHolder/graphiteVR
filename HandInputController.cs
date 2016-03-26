@@ -35,11 +35,15 @@ public class HandInputController : MonoBehaviour {
 	private Vector3 startPos;
 	private Vector3 initialPosition;
 	private Vector3 initialScale;
+	private Vector3 positionVelocity;
+	private Vector3 scaleVelocity;
 
+	private Transform initialTransform;
 
 	// Use this for initialization
 	void Start () {
-	
+				positionVelocity = new Vector3 (0, 0, 0);
+				scaleVelocity = new Vector3 (0, 0, 0);
 	}
 
 	float getFingerAngle(Transform finger) {
@@ -47,7 +51,7 @@ public class HandInputController : MonoBehaviour {
 	}
 
 	// Update is called once per frame
-	void Update () {
+	void FixedUpdate () {
 		prevHandStatus = handStatus;
 		handStatus = getHandStatus();
 		setLineSetsColor(handStatus);
@@ -144,14 +148,19 @@ public class HandInputController : MonoBehaviour {
 		}
 	}
 	
-	void scaleNetwork(){
+	void scaleNetworkjj(){
 		float delta = 0;
 		if (prevHandStatus != handStatus && handStatus == HandStatus.ROCKIN) {
 				startPos = hand.position;
 				initialScale = network.transform.localScale;
 		} else if (handStatus == HandStatus.ROCKIN) {
 				delta = hand.position.y - startPos.y;
-				network.transform.localScale = new Vector3(initialScale[0] + delta, initialScale[1] + delta, initialScale[2] + delta);
+				Vector3 newScale = new Vector3(initialScale[0] + delta, initialScale[1] + delta, initialScale[2] + delta);
+				if (newScale.x > 0.004) {
+						network.transform.localScale = newScale;
+				} else {
+						network.transform.localScale = new Vector3 (0.004f, 0.004f, 0.004f);	
+				}
 		} 
 	}
 
@@ -165,4 +174,23 @@ public class HandInputController : MonoBehaviour {
 					network.transform.position = initialPosition + delta;
 			} 
 	}
+	void scaleNetwork(){
+			float delta = 0;
+			Vector3 minScale = new Vector3 (0.004f, 0.004f, 0.004f);
+			Vector3 objHandDelta = hand.position - network.transform.position;
+			if (prevHandStatus != handStatus && handStatus == HandStatus.ROCKIN) {
+					startPos = hand.position;
+					initialPosition = network.transform.position;
+					initialScale = network.transform.localScale;
+			} else if (handStatus == HandStatus.ROCKIN) {
+					delta = (hand.position.y - startPos.y);
+					Vector3 newScale = initialScale + new Vector3 (delta, delta, delta); 
+					Vector3 realScale = newScale.x >= minScale.x ? newScale : minScale;
+					float scaleRatio = realScale.x / initialScale.x;
+					network.transform.position = initialPosition - (scaleRatio - 1) * (startPos - initialPosition);	 
+					network.transform.localScale = realScale;
+			} 
+	}
+
 }
+

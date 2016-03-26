@@ -28,6 +28,10 @@ static var savedColor = new Color(0,0,0,0);
 static var highlightColor = new Color(1,0,0,1);
 
 public var finger:Transform;
+public var tooltip:GameObject;
+
+
+
 public static var opacity = 0.06;
 static var scaling = 500.0;
 static var cccc = 0;
@@ -59,13 +63,14 @@ function Update () {
 	var p : Vector3 = new Vector3(finger.position.x , finger.position.y, finger.position.z);
 
 	//var p = sphere.transform.position;
-	offset =  this.transform.position.y; 
+	offset = this.transform.position.y; 
 
 	p -= this.transform.position;
 	p /= this.transform.localScale.x;
 	var index:int = kdtree.FindNearest(p);
 	highlight(index);
-
+	//var hic1:HandInputController = HIC1;
+	//Debug.Log(hic1.getHandStatus());
 }
 function testUpdate(){
 	

@@ -10,7 +10,7 @@ namespace AssemblyCSharp
 		public void Start ()
 		{
 		}
-		public void Update() {
+		public void FixedUpdate() {
 			Vector3 position = Vector3.zero;
 			Quaternion rotation = Quaternion.identity;
 			Vector3 root_position = Vector3.zero;

@@ -9,7 +9,7 @@ namespace AssemblyCSharp
 		public void Start ()
 		{
 		}
-		public void Update() {
+		public void FixedUpdate() {
 			Vector3 position = Vector3.zero;
 			Quaternion rotation = Quaternion.identity;
 			if (mStream != null) {
