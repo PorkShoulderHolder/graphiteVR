@@ -60,9 +60,9 @@ function Start() {
 } 
 
 function Update () {
-	var p : Vector3 = new Vector3(finger.position.x , finger.position.y, finger.position.z);
+	//var p : Vector3 = new Vector3(finger.position.x , finger.position.y, finger.position.z);
 
-	//var p = sphere.transform.position;
+	var p = sphere.transform.position;
 	offset = this.transform.position.y; 
 
 	p -= this.transform.position;
@@ -118,6 +118,18 @@ function highlight(index:int){
 
 	nodesMesh.colors  = ptCs;
 	edgesMesh.colors  = cs;
+
+	var ht:Hashtable = positionLookup[index];
+	var location:Vector3 = uniquePoints[index];
+
+	location *= this.transform.localScale.x;
+	location += this.transform.position;
+	if(tooltip.GetComponent(TextMesh).text != ht["screen_name"]){
+		tooltip.transform.position = location + new Vector3(0,0.03,0);
+
+		tooltip.GetComponent(TextMesh).text = ht["screen_name"];
+	}
+
 }
 
 
@@ -192,8 +204,8 @@ function processNodes(nodes : Array) {
     	var y =  parseFloat(pos[1].ToString());
     	var z =  parseFloat(pos[2].ToString());
 
-    	nodeLookup[id] = new Vector3(x,y,z);
-    	uniquePoints[ind] = nodeLookup[id];
+    	nodeLookup[ind] = ht;
+    	uniquePoints[ind] = new Vector3(x,y,z);
     	idList[ind] = id;
     	indexLookup[id] = ind;
    	
