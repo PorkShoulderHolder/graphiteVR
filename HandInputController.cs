@@ -11,6 +11,7 @@ public class HandInputController : MonoBehaviour {
 	public Transform ring;
 	public Transform pinky;
 	
+	public float scaleFactor = 3.0f;
 	public GameObject network;
 	public FingerRenderer[] line_sets;
 	
@@ -29,7 +30,7 @@ public class HandInputController : MonoBehaviour {
 		CLOSED = 6,
 		ROCKIN = 7
 	}
-	private HandStatus handStatus = 0; 
+	public HandStatus handStatus = 0; 
 	private HandStatus prevHandStatus = 0; 
 	
 	private Vector3 startPos;
@@ -51,15 +52,16 @@ public class HandInputController : MonoBehaviour {
 	}
 
 	// Update is called once per frame
-	void FixedUpdate () {
+	void Update () {
 		prevHandStatus = handStatus;
 		handStatus = getHandStatus();
 		setLineSetsColor(handStatus);
+	//	selectNode ();
 		scaleNetwork ();
 		moveNetwork ();
 	}
 
-	HandStatus getHandStatus(){
+	public HandStatus getHandStatus(){
 		HandStatus status = HandStatus.NULL;
 		float thumb_angle = getFingerAngle (thumb);
 		float index_angle = getFingerAngle (index);
@@ -154,7 +156,7 @@ public class HandInputController : MonoBehaviour {
 				startPos = hand.position;
 				initialScale = network.transform.localScale;
 		} else if (handStatus == HandStatus.ROCKIN) {
-				delta = hand.position.y - startPos.y;
+						delta = (hand.position.y - startPos.y);// * network.transform.localScale.x * scaleFactor;
 				Vector3 newScale = new Vector3(initialScale[0] + delta, initialScale[1] + delta, initialScale[2] + delta);
 				if (newScale.x > 0.004) {
 						network.transform.localScale = newScale;
@@ -174,6 +176,7 @@ public class HandInputController : MonoBehaviour {
 					network.transform.position = initialPosition + delta;
 			} 
 	}
+	
 	void scaleNetwork(){
 			float delta = 0;
 			Vector3 minScale = new Vector3 (0.004f, 0.004f, 0.004f);
@@ -183,7 +186,7 @@ public class HandInputController : MonoBehaviour {
 					initialPosition = network.transform.position;
 					initialScale = network.transform.localScale;
 			} else if (handStatus == HandStatus.ROCKIN) {
-					delta = (hand.position.y - startPos.y);
+					delta = (hand.position.y - startPos.y) * network.transform.localScale.x * scaleFactor;
 					Vector3 newScale = initialScale + new Vector3 (delta, delta, delta); 
 					Vector3 realScale = newScale.x >= minScale.x ? newScale : minScale;
 					float scaleRatio = realScale.x / initialScale.x;

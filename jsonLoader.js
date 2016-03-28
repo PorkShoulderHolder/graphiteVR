@@ -9,6 +9,7 @@ import System.IO;
 @script RequireComponent(MeshFilter);
 @script RequireComponent(MeshRenderer);
 
+
 static var kdtree : KDTree;
 static var uniquePoints : Vector3[]; 
 static var colorList : Color[]; 
@@ -25,20 +26,23 @@ static var indicesMaster : int[];
 
 static var selectedIndex:int = -1;
 static var savedColor = new Color(0,0,0,0);
-static var highlightColor = new Color(1,0,0,1);
+static var highlightColor = new Color(1,1,1,0.1);
 
 public var finger:Transform;
 public var tooltip:GameObject;
+public var HIC1:HandInputController;
 
+var highLighted = false;
 
-
-public static var opacity = 0.06;
+var fps = 0;
+var frames = 0;
+static var opacity:float = 0.05f;
 static var scaling = 500.0;
 static var cccc = 0;
 static var nodesMesh:Mesh;
 static var edgesMesh:Mesh;
 public var offset = -7.22;
-static var sphere : GameObject;
+public var sphere : GameObject;
 
 var content = new Hashtable();
 var handStatus:int;
@@ -60,17 +64,12 @@ function Start() {
 } 
 
 function Update () {
-	//var p : Vector3 = new Vector3(finger.position.x , finger.position.y, finger.position.z);
 
-	var p = sphere.transform.position;
-	offset = this.transform.position.y; 
-
-	p -= this.transform.position;
-	p /= this.transform.localScale.x;
-	var index:int = kdtree.FindNearest(p);
-	highlight(index);
-	//var hic1:HandInputController = HIC1;
-	//Debug.Log(hic1.getHandStatus());
+	fps += 1.0 / Time.deltaTime;
+	frames++;
+	if(frames%600 ==0){
+		Debug.Log("AVG FPS: " +  fps / frames);
+	}
 }
 function testUpdate(){
 	
@@ -89,21 +88,33 @@ public static function unHighlight(index){
 
 	if( selectedIndex >= 0 ){
 		var nsColor = new Color(savedColor[0],savedColor[0],savedColor[0],1);
-		var esColor = new Color(savedColor[0],savedColor[0],savedColor[0],opacity);
+		var esColor = new Color(savedColor[0],savedColor[0],savedColor[0], opacity);
 		nodesMesh.colors[selectedIndex] = nsColor;
 		edgesMesh.colors[selectedIndex] = esColor;
 	}
 	selectedIndex = -1;
 }
 
-function highlight(index:int){
+function highlight(){
+	//var p : Vector3 = new Vector3(finger.position.x , finger.position.y, finger.position.z);
+
+	var p = sphere.transform.position;
+	offset = this.transform.position.y; 
+
+	p -= this.transform.position;
+	p /= this.transform.localScale.x;
+	var index:int = kdtree.FindNearest(p);
+	highlightIndex(index);
+}
+
+function highlightIndex(index:int){
 	var edgesChild:GameObject = GameObject.Find("Edges");
 	var cs:Color[] = colorList;
 	var ptCs:Color[] = ptColorList;
 
 	if( selectedIndex >= 0 ){
 		var nsColor = new Color(savedColor[0],savedColor[1],savedColor[2],1);
-		var esColor = new Color(savedColor[0],savedColor[1],savedColor[2],opacity);
+		var esColor = new Color(savedColor[0],savedColor[1],savedColor[2], opacity);
 		cs[selectedIndex] = esColor;
 		ptCs[selectedIndex] = nsColor;
 	}
@@ -125,10 +136,21 @@ function highlight(index:int){
 	location *= this.transform.localScale.x;
 	location += this.transform.position;
 	if(tooltip.GetComponent(TextMesh).text != ht["screen_name"]){
-		tooltip.transform.position = location + new Vector3(0,0.03,0);
 
+		tooltip.transform.position = location + new Vector3(0,0.03,0);	
 		tooltip.GetComponent(TextMesh).text = ht["screen_name"];
+
+//		var www: WWW = new WWW(ht["profile_image_url"]);
+//		yield www;
+//		if(!www.error){
+//			Debug.Log(ht["profile_image_url"]);
+//			www.LoadImageIntoTexture(imagePlane.GetComponent.<Renderer>().material.mainTexture);
+//		}
+//		else{
+//			Debug.Log(www.error);
+//		}
 	}
+	tooltip.transform.LookAt(2 * tooltip.transform.position - Camera.main.transform.position);
 
 }
 
@@ -174,10 +196,10 @@ function UpdateMeshes() {
     	identityList[i] = i;
     }
 
-    nodesMesh = new Mesh();
+   // nodesMesh = new Mesh();
     edgesMesh = new Mesh();
 	createMeshObject(edgesMesh, "Edges", uniquePoints, colorList, indicesMaster, MeshTopology.Lines);
-	createMeshObject(nodesMesh, "Nodes", uniquePoints, ptColorList, identityList, MeshTopology.Points);
+	//createMeshObject(nodesMesh, "Nodes", uniquePoints, ptColorList, identityList, MeshTopology.Points);
 }
 
 
