@@ -152,16 +152,19 @@ public class HandInputController : MonoBehaviour {
 	
 	void scaleNetworkjj(){
 		float delta = 0;
+		float minScale = 0.004f;
+		float maxScale = 0.5f;
+
 		if (prevHandStatus != handStatus && handStatus == HandStatus.ROCKIN) {
 				startPos = hand.position;
 				initialScale = network.transform.localScale;
 		} else if (handStatus == HandStatus.ROCKIN) {
 						delta = (hand.position.y - startPos.y);// * network.transform.localScale.x * scaleFactor;
 				Vector3 newScale = new Vector3(initialScale[0] + delta, initialScale[1] + delta, initialScale[2] + delta);
-				if (newScale.x > 0.004) {
+					if (newScale.x > minScale) {
 						network.transform.localScale = newScale;
 				} else {
-						network.transform.localScale = new Vector3 (0.004f, 0.004f, 0.004f);	
+						network.transform.localScale = new Vector3 (minScale, minScale, minScale);	
 				}
 		} 
 	}
@@ -180,6 +183,8 @@ public class HandInputController : MonoBehaviour {
 	void scaleNetwork(){
 			float delta = 0;
 			Vector3 minScale = new Vector3 (0.004f, 0.004f, 0.004f);
+			Vector3 maxScale = new Vector3 (0.5f, 0.5f, 0.5f);
+
 			Vector3 objHandDelta = hand.position - network.transform.position;
 			if (prevHandStatus != handStatus && handStatus == HandStatus.ROCKIN) {
 					startPos = hand.position;
@@ -188,7 +193,14 @@ public class HandInputController : MonoBehaviour {
 			} else if (handStatus == HandStatus.ROCKIN) {
 					delta = (hand.position.y - startPos.y) * network.transform.localScale.x * scaleFactor;
 					Vector3 newScale = initialScale + new Vector3 (delta, delta, delta); 
-					Vector3 realScale = newScale.x >= minScale.x ? newScale : minScale;
+					Vector3 realScale = new Vector3 (0,0,0);
+					if (newScale.x > maxScale.x) {
+							realScale = maxScale;
+					} else if (newScale.x < minScale.x) {
+						realScale = minScale;
+					} else {
+							realScale = newScale;
+					}
 					float scaleRatio = realScale.x / initialScale.x;
 					network.transform.position = initialPosition - (scaleRatio - 1) * (startPos - initialPosition);	 
 					network.transform.localScale = realScale;
