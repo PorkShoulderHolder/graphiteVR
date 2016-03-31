@@ -96,9 +96,9 @@ public static function unHighlight(index){
 }
 
 function highlight(){
-	var p : Vector3 = new Vector3(finger.position.x , finger.position.y, finger.position.z);
+	//var p : Vector3 = new Vector3(finger.position.x , finger.position.y, finger.position.z);
 
-	//var p = sphere.transform.position;
+	var p = sphere.transform.position;
 	offset = this.transform.position.y; 
 
 	p -= this.transform.position;
